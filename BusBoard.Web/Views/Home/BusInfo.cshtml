@@ -7,4 +7,37 @@
 
 <div class="row">
     <p>You entered postcode @Model.PostCode</p>
+
+    <table class="table">
+        @foreach (var stop in Model.StopsAndDepartures)
+        {
+            <thead class="thead-dark">
+                <tr>
+                    <th colspan="4">Departures from @stop.StopName</th>
+                </tr>
+            </thead>
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Line number</th>
+                    <th scope="col">Direction</th>
+                    <th scope="col">Aimed</th>
+                    <th scope="col">Expected</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var departure in stop.Departures.Values.ToList().SelectMany(x => x)
+                    .OrderBy(bus => bus.ExpectedDepartureTime)
+                    .Take(5)
+                    .ToList())
+                {
+                    <tr>
+                        <td>@departure.LineNumber</td>
+                        <td>@departure.Direction</td>
+                        <td>@departure.ExpectedDepartureTime</td>
+                        <td>@departure.AimedDepartureTime</td>
+                    </tr>
+                }
+            </tbody>
+        }
+    </table>
 </div>
