@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using BusBoard.Api;
 
 namespace BusBoard
 {
@@ -10,79 +11,24 @@ namespace BusBoard
             Console.WriteLine("Welcome to BusBoard!");
 
             //Convert Postcode to Latitude and Longitude
-            string urlPost = CreateUrlForPostcode();
-            using var client = new HttpClient();
-            HttpResponseMessage tempPost =
-                await client.GetAsync(urlPost);
-            string inputPost = "";
-            while (tempPost.IsSuccessStatusCode != true)
-            {
-                Console.WriteLine("That is not a valid postcode.");
-                urlPost = CreateUrlForPostcode();
-                tempPost =
-                    await client.GetAsync(urlPost);
-            }
-            inputPost = await tempPost.Content.ReadAsStringAsync();
-            
-            Postcodes latLong = getLatLong(inputPost);
-            
-            //Convert latitude and longitude to bus stop ATCO codes
-            string urlLatLong = CreateUrlForLatLong(latLong.latitude, latLong.longitude);
-            var inputLatLong =
-                await client.GetStringAsync(urlLatLong);
-            IList<BusStops> stopList = getStops(inputLatLong);
+            Console.WriteLine("Enter a valid postcode: ");
+            string postCode = Console.ReadLine();
+
+            IList<BusStops> stopList = new List<BusStops>();
+            Task t = new Task(BusBoard.Api.Class1.getStopList(postCode));
+            await BusBoard.Api.Class1.getStopList(postCode, stopList);
 
             //Getting schedule from each stop
             for (int i = 0; i < 2; i++)
             {
-                string url = CreateUrlForBuses(stopList[i].atcocode);
+                string url = CreateUrlForBuses(stopList[0].atcocode);
+                using var client = new HttpClient();
                 var input =
                     await client.GetStringAsync(url);
 
                 List<Buses> displayList = getSchedule(input);
                 displayBuses(stopList, displayList, i);
             }
-
-        }
-
-        public static string CreateUrlForPostcode()
-        {
-            Console.WriteLine("Enter a valid postcode: ");
-            string postCode = Console.ReadLine();
-            string urlPost = "https://api.postcodes.io/postcodes/" + postCode;
-            return urlPost;
-        }
-        
-        public static Postcodes getLatLong(string inputPost)
-        {
-            JObject jOresultPost = JObject.Parse(inputPost);
-            JToken dataPost = jOresultPost["result"];
-            Postcodes latLong = dataPost.ToObject<Postcodes>();
-            return latLong;
-        }
-        
-        public static string CreateUrlForLatLong(string Lat, string Long)
-        {
-            var uLatLong = "http://transportapi.com/v3/uk/places.json?";
-            var builder = new UriBuilder(uLatLong);
-            builder.Query = "lat=" + Lat + "&lon=" + Long +
-                            "&type=bus_stop&app_id=7d0ebcfd&app_key=bb3b6e2b09788d7ca770cd28ba1156bf&limit=2";
-            var urlLatLong = builder.ToString();
-            return urlLatLong;
-        }
-        
-        public static IList<BusStops> getStops(string inputLatLong)
-        {
-            JObject jOresultLatLong = JObject.Parse(inputLatLong);
-            IList<JToken> dataLatLong = jOresultLatLong["member"].Children().ToList();
-            IList<BusStops> stopList = new List<BusStops>();
-            foreach (JToken stop in dataLatLong)
-            {
-                BusStops tempStop = stop.ToObject<BusStops>();
-                stopList.Add(tempStop);
-            }
-
-            return stopList;
         }
 
         public static string CreateUrlForBuses(string stopCode)
@@ -93,17 +39,16 @@ namespace BusBoard
             var url = builder.ToString();
             return url;
         }
-
-        public static List<Buses> getSchedule(string input)
+        
+        static List<Buses> getSchedule(string input)
         {
             var busList = new DeparturesResponse();
             busList = Newtonsoft.Json.JsonConvert.DeserializeObject<DeparturesResponse>(input);
-
             List<Buses> displayList = busList.Departures.SelectMany(pair => pair.Value).ToList();
             displayList = displayList.OrderBy(bus => bus.aimed_departure_time).ToList();
             return displayList;
-        }
-
+        }  
+        
         public static void displayBuses(IList<BusStops> stopList, List<Buses> displayList, int i)
         {
             Console.WriteLine("The next five buses at stop " + stopList[i].name + " are: ");
