@@ -14,40 +14,19 @@ namespace BusBoard
             Console.WriteLine("Enter a valid postcode: ");
             string postCode = Console.ReadLine();
 
-            IList<BusStops> stopList = new List<BusStops>();
-            Task t = new Task(BusBoard.Api.Class1.getStopList(postCode));
-            await BusBoard.Api.Class1.getStopList(postCode, stopList);
+            IList<BusStops> stopList = await BusBoard.Api.Class1.getStopList(postCode);
 
             //Getting schedule from each stop
             for (int i = 0; i < 2; i++)
             {
-                string url = CreateUrlForBuses(stopList[0].atcocode);
-                using var client = new HttpClient();
-                var input =
-                    await client.GetStringAsync(url);
+                string url = BusBoard.Api.Class1.CreateUrlForBuses(stopList[i].atcocode);
+                var input = BusBoard.Api.Class1.AccessUrl(url);
 
-                List<Buses> displayList = getSchedule(input);
+                List<Buses> displayList = BusBoard.Api.Class1.getSchedule(input.Result);
                 displayBuses(stopList, displayList, i);
             }
         }
-
-        public static string CreateUrlForBuses(string stopCode)
-        {
-            var u = "https://transportapi.com/v3/uk/bus/stop/" + stopCode + "///timetable.json?";
-            var builder = new UriBuilder(u);
-            builder.Query = "app_id=7d0ebcfd&app_key=bb3b6e2b09788d7ca770cd28ba1156bf&group=route&limit=5";
-            var url = builder.ToString();
-            return url;
-        }
         
-        static List<Buses> getSchedule(string input)
-        {
-            var busList = new DeparturesResponse();
-            busList = Newtonsoft.Json.JsonConvert.DeserializeObject<DeparturesResponse>(input);
-            List<Buses> displayList = busList.Departures.SelectMany(pair => pair.Value).ToList();
-            displayList = displayList.OrderBy(bus => bus.aimed_departure_time).ToList();
-            return displayList;
-        }  
         
         public static void displayBuses(IList<BusStops> stopList, List<Buses> displayList, int i)
         {

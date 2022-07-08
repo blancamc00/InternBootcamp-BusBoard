@@ -4,7 +4,7 @@ namespace BusBoard.Api;
 
 public class Class1
 {
-    public static async void getStopList(string postCode)
+    public static async Task<IList<BusStops>> getStopList(string postCode)
     {
         string urlPost = CreateUrlForPostcode(postCode);
         using var client = new HttpClient();
@@ -26,12 +26,18 @@ public class Class1
             
         //Convert latitude and longitude to bus stop ATCO codes
         string urlLatLong = CreateUrlForLatLong(latLong.latitude, latLong.longitude);
-        var inputLatLong =
-            await client.GetStringAsync(urlLatLong);
-        stopList = getStops(inputLatLong);
+        var inputLatLong = AccessUrl(urlLatLong);
+        IList<BusStops> stopList = getStops(inputLatLong.Result);
+        return stopList;
     }
-    
-    
+
+    public static async Task<string> AccessUrl(string url)
+    {
+        using var client = new HttpClient();
+        var data =
+            await client.GetStringAsync(url);
+        return data;
+    }
     public static string CreateUrlForPostcode(string postCode)
     {
         string urlPost = "https://api.postcodes.io/postcodes/" + postCode;
@@ -70,7 +76,7 @@ public class Class1
         return stopList;
     }
 
-    static string CreateUrlForBuses(string stopCode)
+    public static string CreateUrlForBuses(string stopCode)
     {
         var u = "https://transportapi.com/v3/uk/bus/stop/" + stopCode + "///timetable.json?";
         var builder = new UriBuilder(u);
@@ -79,7 +85,7 @@ public class Class1
         return url;
     }
 
-    static List<Buses> getSchedule(string input)
+    public static List<Buses> getSchedule(string input)
     {
         var busList = new DeparturesResponse();
         busList = Newtonsoft.Json.JsonConvert.DeserializeObject<DeparturesResponse>(input);
