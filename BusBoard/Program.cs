@@ -32,7 +32,7 @@ namespace BusBoard
 
             IList<BusStops> stopList = getStops(inputLatLong);
             
-
+        //0500CCITY223 - atcocode with multiple routes
             for (int i = 0; i < 2; i++)
             {
                 string url = CreateUrlForBuses(stopList[i].atcocode);
@@ -47,13 +47,12 @@ namespace BusBoard
                 Console.WriteLine("The next five buses at stop n" + (i+1) + " are: ");
 
                 List<Buses> displayList = busList.Departures.SelectMany(pair => pair.Value).ToList();
-                
-                //SORT BUS LIST BY TIME BEFORE PRINTING NEXT FIVE
+                displayList = displayList.OrderBy(bus => bus.aimed_departure_time).ToList();
 
                 for (int j = 0; j < 5; j++)
                 {
                     //Console.WriteLine(busList[j].line + " " + busList[j].direction + " " + busList[j].aimed_departure_time);
-                    Console.WriteLine(displayList[j].line);
+                    Console.WriteLine(displayList[j].line + " " + displayList[j].aimed_departure_time);
                 }
             }
 
