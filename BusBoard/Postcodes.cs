@@ -1,4 +1,5 @@
-﻿namespace BusBoard;
+﻿using Newtonsoft.Json;
+namespace BusBoard;
 
 public class Postcodes
 {
