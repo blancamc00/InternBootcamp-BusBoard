@@ -8,5 +8,5 @@ public class DeparturesResponse
     public string StopName { get; set; }
     
     [JsonProperty("departures")]
-    public Dictionary<string, List<Buses>> Departures { get; set; }
+    public Dictionary<string, List<Bus>> Departures { get; set; }
 }
