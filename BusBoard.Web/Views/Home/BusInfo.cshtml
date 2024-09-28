@@ -1,0 +1,27 @@
+﻿@model BusBoard.Web.ViewModels.BusInfo
+@{
+  ViewBag.Title = "Bus Information";
+}
+
+<h2>BusInfo</h2>
+
+<div class="row">
+    <p>You entered postcode @Model.PostCode</p>
+</div>
+
+@{
+    for (int i = 0; i < Model.StopList.Count; i++)
+    {
+        <div class="row">
+            <p>The next five buses at the @Model.StopList[i].name stop are</p>
+        </div>
+
+        for (int j = 0; j < Model.DisplayList[i].Count; j++)
+        {
+            <div class="row">
+                <p> @Model.DisplayList[i][j].line @Model.DisplayList[i][j].direction @Model.DisplayList[i][j].aimed_departure_time </p>
+            </div>
+        }
+    }
+}
+
